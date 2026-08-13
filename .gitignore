@@ -1,0 +1,6 @@
+.aider*
+
+.env
+play-store-key.json
+*.keystore
+*.jks

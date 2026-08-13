@@ -1,0 +1,33 @@
+{
+  "short_name": "PtahSuite",
+  "name": "Ptah Studio Progressive Web App",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/index.html",
+  "background_color": "#ffffff",
+  "theme_color": "#6200ee",
+  "display": "standalone",
+  "orientation": "portrait",
+  "shortcuts": [
+    {
+      "name": "Ver Proyectos",
+      "short_name": "Proyectos",
+      "url": "/index.html#projects",
+      "description": "Lista de proyectos locales guardados"
+    }
+  ],
+  "prefer_related_applications": false,
+  "categories": ["productivity", "utilities"]
+}

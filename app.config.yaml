@@ -1,0 +1,14 @@
+app:
+  id: "com.ptahstudio.myapp"
+  name: "Ptah Studio App"
+  version: "1.0.0"
+  description: "A Progressive Web App powered by Ptah Studio"
+  theme:
+    primary_color: "#6200EE"
+    secondary_color: "#03DAC6"
+    background_color: "#FFFFFF"
+  server:
+    port: 8080
+  features:
+    offline_support: true
+    notifications: true
