@@ -74,6 +74,86 @@ jobs:
           path: reports/
           retention-days: 14
 
+      # =========================================================
+      # 🟢 NOTIFICACIONES DE ÉXITO (if: success())
+      # =========================================================
+      - name: Send Telegram Success Notification
+        if: success()
+        run: |
+          if [ -n "${{ secrets.TELEGRAM_BOT_TOKEN }}" ] && [ -n "${{ secrets.TELEGRAM_CHAT_ID }}" ]; then
+            ENV_VAL="${{ inputs.environment || 'Push/PR (Auto)' }}"
+            TAG_VAL="${{ inputs.custom_tag || 'N/A' }}"
+
+            MESSAGE="✅ *Pipeline CI/CD Exitoso - Ptah Studio*%0A%0A"
+            MESSAGE+="*Repositorio:* ${{ github.repository }}%0A"
+            MESSAGE+="*Rama / Evento:* ${{ github.ref_name }} (${{ github.event_name }})%0A"
+            MESSAGE+="*Entorno:* ${ENV_VAL}%0A"
+            MESSAGE+="*Versión / Tag:* ${TAG_VAL}%0A"
+            MESSAGE+="*Ejecutado por:* ${{ github.actor }}%0A"
+            MESSAGE+="*Commit:* \`${{ github.sha }}\`%0A%0A"
+            MESSAGE+="[Ver Detalle de Ejecución](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})"
+            
+            curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+              -d "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" \
+              -d "text=${MESSAGE}" \
+              -d "parse_mode=Markdown"
+          else
+            echo "⚠️ Secretos de Telegram no configurados. Omitiendo notificación."
+          fi
+
+      - name: Send Slack Success Notification
+        if: success()
+        run: |
+          if [ -n "${{ secrets.SLACK_WEBHOOK_URL }}" ]; then
+            ENV_VAL="${{ inputs.environment || 'Push/PR (Auto)' }}"
+            TAG_VAL="${{ inputs.custom_tag || 'N/A' }}"
+
+            cat << EOF_SLACK > /tmp/slack_success.json
+            {
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "✅ Compilación y Auditoría PWA Exitosas",
+                    "emoji": true
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    { "type": "mrkdwn", "text": "*Repositorio:*\n${{ github.repository }}" },
+                    { "type": "mrkdwn", "text": "*Rama / Evento:*\n${{ github.ref_name }} (${{ github.event_name }})" },
+                    { "type": "mrkdwn", "text": "*Entorno:*\n${ENV_VAL}" },
+                    { "type": "mrkdwn", "text": "*Versión / Tag:*\n${TAG_VAL}" },
+                    { "type": "mrkdwn", "text": "*Ejecutado por:*\n${{ github.actor }}" }
+                  ]
+                },
+                {
+                  "type": "actions",
+                  "elements": [
+                    {
+                      "type": "button",
+                      "text": { "type": "plain_text", "text": "Ver Detalle en GitHub Actions" },
+                      "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+                      "style": "primary"
+                    }
+                  ]
+                }
+              ]
+            }
+EOF_SLACK
+
+            curl -s -X POST -H 'Content-type: application/json' \
+              --data @/tmp/slack_success.json \
+              "${{ secrets.SLACK_WEBHOOK_URL }}"
+          else
+            echo "⚠️ Webhook de Slack no configurado. Omitiendo notificación."
+          fi
+
+      # =========================================================
+      # 🔴 NOTIFICACIONES DE FALLO (if: failure())
+      # =========================================================
       - name: Send Telegram Failure Alert
         if: failure()
         run: |
@@ -108,7 +188,7 @@ jobs:
             TAG_VAL="${{ inputs.custom_tag || 'N/A' }}"
             AUDIT_VAL="${{ inputs.run_audit != '' && inputs.run_audit || 'true' }}"
 
-            cat << EOF_SLACK > /tmp/slack_payload.json
+            cat << EOF_SLACK > /tmp/slack_failure.json
             {
               "blocks": [
                 {
@@ -146,7 +226,7 @@ jobs:
 EOF_SLACK
 
             curl -s -X POST -H 'Content-type: application/json' \
-              --data @/tmp/slack_payload.json \
+              --data @/tmp/slack_failure.json \
               "${{ secrets.SLACK_WEBHOOK_URL }}"
           else
             echo "⚠️ Webhook de Slack no configurado. Omitiendo notificación."
